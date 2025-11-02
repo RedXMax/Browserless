@@ -1,11 +1,11 @@
-name: Add macOS Admin User, Enable VNC, and Build Playit with SSHx
+name: Add macOS Admin User, Enable VNC, and Run SSHx
 
 on:
   workflow_dispatch:
 
 jobs:
   setup-remote-access:
-    name: Create Admin User, Enable ARD/VNC, Build Playit, and Run SSHx
+    name: Create Admin User, Enable ARD/VNC, and Run SSHx
     runs-on: namespace-profile-test
 
     steps:
@@ -36,31 +36,15 @@ jobs:
             -users rohit \
             -restart -agent
 
-      # 🆕 Added steps to build Playit agent before SSHx
-      - name: Step 5 — Install Rust toolchain
+      - name: Step 5 — Start Serveo VNC tunnel in background
         continue-on-error: true
         run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
+          nohup ssh -o StrictHostKeyChecking=no -R myvnc:5900:localhost:5900 serveo.net > serveo.log 2>&1 &
+          echo "✅ Serveo tunnel started in background."
+          sleep 5
+          
 
-      - name: Step 6 — Clone and build Playit agent
-        continue-on-error: true
-        run: |
-          git clone https://github.com/playit-cloud/playit-agent.git
-          cd playit-agent
-          cargo build --release
-          echo "✅ Playit built successfully."
-
-      - name: Step 7 — Add playit-cli to global PATH
-        continue-on-error: true
-        run: |
-          sudo mv playit-agent/target/release/playit-cli /usr/local/bin/playit
-          sudo chmod +x /usr/local/bin/playit
-          echo "✅ Playit added to global PATH."
-          which playit
-          playit --version || echo "Playit ready to run"
-
-      - name: Step 8 — Start SSHx remote shell session
+      - name: Step 6 — Start SSHx remote shell session
         continue-on-error: true
         timeout-minutes: 355
         run: |
