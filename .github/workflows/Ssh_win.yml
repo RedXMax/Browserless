@@ -49,7 +49,7 @@ jobs:
           Write-Output "⏳ Waiting for Serveo to assign a public URL..."
           while ($true) {
               try {
-                  & ssh -p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 0:localhost:3389 serveo.net 2>&1 |
+                  & ssh -p 3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 0:localhost:3389 serveo.net 2>&1 |
                       Tee-Object -Variable Output
                   $Output | Select-String "Forwarding TCP connections" | ForEach-Object {
                       Write-Host "✅ Public RDP Address: $($_.Line)"
