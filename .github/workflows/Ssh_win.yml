@@ -1,0 +1,61 @@
+name: Windows with Depot ssh
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-on-windows:
+    runs-on: depot-windows-2022-16
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+
+    steps:
+      # Step 1: Configure Administrator account
+      - name: Configure Administrator account
+        shell: cmd
+        continue-on-error: true
+        run: |
+          net user Administrator "OLDUNER#6"
+          net user Administrator /active:yes
+          net localgroup Administrators Administrator /add
+
+      # Step 2: Restore Data folder cache
+      - name: Restore Data folder cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: C:\Users\Administrator\Desktop\Data
+          key: ${{ runner.os }}-admin-desktop-data-${{ github.run_number }}
+          restore-keys: |
+            ${{ runner.os }}-admin-desktop-data-
+
+      # Step 3: Install OpenSSH client (if missing)
+      - name: Ensure OpenSSH client is installed
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+          ssh -V
+
+      # Step 4: Run reverse tunnel with Serveo (no auth)
+      - name: Run reverse tunnel with Serveo (no auth)
+        shell: pwsh
+        timeout-minutes: 350
+        continue-on-error: true
+        run: |
+          Write-Output "Starting Serveo RDP tunnel (port 3389)"
+          while ($true) {
+              & ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -N -R 3389:localhost:3389 serveo.net
+              Write-Output "SSH tunnel closed — restarting in 10 seconds..."
+              Start-Sleep -Seconds 10
+          }
+
+      # Step 5: Save Data folder cache
+      - name: Save Data folder cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: C:\Users\Administrator\Desktop\Data
+          key: ${{ runner.os }}-admin-desktop-data-${{ github.run_number }}
