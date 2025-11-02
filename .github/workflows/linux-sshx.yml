@@ -5,7 +5,7 @@ on:
 
 jobs:
   sshx:
-    runs-on: depot-ubuntu-24.04-64	
+    runs-on: namespace-profile-test	
     steps:
       - name: Run SSHX
         run: curl -sSf https://sshx.io/get | sh -s run
