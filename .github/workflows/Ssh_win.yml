@@ -45,20 +45,9 @@ jobs:
         timeout-minutes: 350
         continue-on-error: true
         run: |
-          Write-Output "🚀 Starting Serveo RDP tunnel on port 443..."
-          Write-Output "⏳ Waiting for Serveo to assign a public URL..."
-          while ($true) {
-              try {
-                  & ssh -p 3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 0:localhost:3389 serveo.net 2>&1 |
-                      Tee-Object -Variable Output
-                  $Output | Select-String "Forwarding TCP connections" | ForEach-Object {
-                      Write-Host "✅ Public RDP Address: $($_.Line)"
-                  }
-              } catch {
-                  Write-Warning "⚠️ SSH tunnel disconnected — restarting in 10 seconds..."
-                  Start-Sleep -Seconds 10
-              }
-          }
+          while true; do 
+          ssh -p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R0:localhost:3389 tcp+force@ap.free.pinggy.io; 
+           sleep 10; done
 
       # Step 5: Keep the runner alive
       - name: Keep runner alive
