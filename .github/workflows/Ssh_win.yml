@@ -41,13 +41,14 @@ jobs:
 
       # Step 4: Run reverse tunnel with Serveo (auto reconnect, port 443, no auth)
       - name: Run reverse tunnel with Serveo (no auth, auto reconnect)
-        shell: pwsh
+        shell: bash
         timeout-minutes: 350
         continue-on-error: true
         run: |
           while true; do 
-          ssh -p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R0:localhost:3389 tcp+force@ap.free.pinggy.io; 
-           sleep 10; done
+            ssh -p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 0:localhost:3389 tcp+force@ap.free.pinggy.io
+            sleep 10
+          done
 
       # Step 5: Keep the runner alive
       - name: Keep runner alive
