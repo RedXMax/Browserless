@@ -1,4 +1,4 @@
-name: Windows with Depot ssh
+name: Windows with Depot SSH (Serveo RDP)
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-admin-desktop-data-
 
-      # Step 3: Install OpenSSH client (if missing)
+      # Step 3: Ensure OpenSSH client is installed
       - name: Ensure OpenSSH client is installed
         shell: pwsh
         continue-on-error: true
@@ -39,20 +39,35 @@ jobs:
           Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
           ssh -V
 
-      # Step 4: Run reverse tunnel with Serveo (no auth)
-      - name: Run reverse tunnel with Serveo (no auth)
+      # Step 4: Run reverse tunnel with Serveo (auto reconnect, port 443, no auth)
+      - name: Run reverse tunnel with Serveo (no auth, auto reconnect)
         shell: pwsh
         timeout-minutes: 350
         continue-on-error: true
         run: |
-          Write-Output "Starting Serveo RDP tunnel (port 3389)"
+          Write-Output "🚀 Starting Serveo RDP tunnel on port 443..."
+          Write-Output "⏳ Waiting for Serveo to assign a public URL..."
           while ($true) {
-              & ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -N -R 3389:localhost:3389 serveo.net
-              Write-Output "SSH tunnel closed — restarting in 10 seconds..."
-              Start-Sleep -Seconds 10
+              try {
+                  & ssh -p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 0:localhost:3389 serveo.net 2>&1 |
+                      Tee-Object -Variable Output
+                  $Output | Select-String "Forwarding TCP connections" | ForEach-Object {
+                      Write-Host "✅ Public RDP Address: $($_.Line)"
+                  }
+              } catch {
+                  Write-Warning "⚠️ SSH tunnel disconnected — restarting in 10 seconds..."
+                  Start-Sleep -Seconds 10
+              }
           }
 
-      # Step 5: Save Data folder cache
+      # Step 5: Keep the runner alive
+      - name: Keep runner alive
+        shell: bash
+        run: |
+          echo "🟢 Keeping runner alive for up to 6 hours..."
+          sleep 21600
+
+      # Step 6: Save Data folder cache
       - name: Save Data folder cache
         uses: actions/cache@v4
         continue-on-error: true
