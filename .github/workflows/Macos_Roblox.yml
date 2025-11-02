@@ -1,0 +1,43 @@
+name: Add macOS Admin User and Enable VNC with SSHx
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-remote-access:
+    name: Create Admin User, Enable ARD/VNC, and Run SSHx
+    runs-on: macos-latest
+
+    steps:
+      - name: Step 1 — Create user "rohit"
+        continue-on-error: true
+        run: |
+          sudo sysadminctl -addUser rohit -password admin
+
+      - name: Step 2 — Add user "rohit" to admin group
+        continue-on-error: true
+        run: |
+          sudo dseditgroup -o edit -a rohit -t user admin
+
+      - name: Step 3 — Verify user privileges
+        continue-on-error: true
+        run: |
+          id rohit
+          dseditgroup -o checkmember -m rohit admin
+
+      - name: Step 4 — Enable ARD and configure VNC access
+        continue-on-error: true
+        run: |
+          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+            -activate -configure -access -on \
+            -clientopts -setvnclegacy -vnclegacy yes \
+            -clientopts -setvncpw -vncpw admin \
+            -allowAccessFor -specifiedUsers \
+            -users rohit \
+            -restart -agent
+
+      - name: Step 5 — Start SSHx remote shell session
+        continue-on-error: true
+        timeout-minutes: 355
+        run: |
+          curl -sSf https://sshx.io/get | sh -s run
