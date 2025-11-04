@@ -31,29 +31,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-admin-desktop-data-
 
-      # Step 3: Download Pinggy CLI
-      - name: Download Pinggy CLI
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $url = "https://s3.ap-south-1.amazonaws.com/public.pinggy.binaries/cli/v0.2.5/windows/amd64/pinggy.exe"
-          $output = "$env:USERPROFILE\pinggy.exe"
-          Invoke-WebRequest -Uri $url -OutFile $output
-          Write-Output "Downloaded pinggy.exe to $output"
+      # Step 3: Download Pinggy CLI (Commented Out)
+      # - name: Download Pinggy CLI
+      #   shell: pwsh
+      #   continue-on-error: true
+      #   run: |
+      #     $url = "https://s3.ap-south-1.amazonaws.com/public.pinggy.binaries/cli/v0.2.5/windows/amd64/pinggy.exe"
+      #     $output = "$env:USERPROFILE\pinggy.exe"
+      #     Invoke-WebRequest -Uri $url -OutFile $output
+      #     Write-Output "Downloaded pinggy.exe to $output"
 
-      # Step 4: Run reverse tunnel with Pinggy (timeout 5h 45m)
-      - name: Run reverse tunnel with Pinggy
+      # Step 4: Run reverse tunnel with ssh (serveo)
+      - name: Run reverse tunnel with ssh (serveo)
         shell: pwsh
         timeout-minutes: 350
         continue-on-error: true
         run: |
-          $pinggy = "$env:USERPROFILE\pinggy.exe"
           while ($true) {
-              & $pinggy -p 443 -R0:127.0.0.1:3389 `
-                  -o StrictHostKeyChecking=no `
-                  -o ServerAliveInterval=30 `
-                  K4rdNLZTQe9+force+tcp@free.pinggy.io
-              Start-Sleep -Seconds 10
+              & ssh -v `
+                -o StrictHostKeyChecking=no `
+                -o UserKnownHostsFile=/dev/null `
+                -R codednexsus:3389:localhost:3389 serveo.net
           }
 
       # Step 5: Save Data folder cache
