@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-on-windows:
-    runs-on: window-latest
+    runs-on: tenki-standard-large-plus-16c-32g
     permissions:
       contents: read
       id-token: write
