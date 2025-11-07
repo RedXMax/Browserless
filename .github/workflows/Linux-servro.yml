@@ -5,7 +5,7 @@ on:
 
 jobs:
   serveo:
-    runs-on: tenki-standard-large-plus-16c-32g
+    runs-on: namespace-profile-test
 
     steps:
       # Step 1: Enable Namespace cache for /data (instant persistent cache)
